@@ -3,15 +3,18 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import argparse
+from tqdm import tqdm
 
 
-def show_tensorflow_log(path):
+def show_tensorflow_log(path, title_text='', output_image_name='validation_results.png'):
 
     # Loading too much data is slow...
     tf_size_guidance = {
         'scalars': 100
     }
 
+    print('Start data accumulation')
     event_acc = EventAccumulator(path, tf_size_guidance)
     event_acc.Reload()
 
@@ -30,7 +33,7 @@ def show_tensorflow_log(path):
     x = np.arange(steps)
     y = np.zeros([steps, 4])
 
-    for i in range(steps):
+    for i in tqdm(range(steps)):
         y[i, 0] = val_f1[i][2]
         y[i, 1] = val_precision[i][2]
         y[i, 2] = val_mAP[i][2]
@@ -43,11 +46,22 @@ def show_tensorflow_log(path):
 
     plt.xlabel("Epochs")
     plt.ylabel("Value")
-    plt.title("Validation results")
+    plt.title(title_text)
     plt.legend(loc='upper right', frameon=True)
-    plt.savefig('validation_results.png')
+    plt.savefig(output_image_name)
 
 
 if __name__ == '__main__':
-    log_file = "./PyTorch-YOLOv3/logs/events.out.tfevents.1562327706.af1c1de51c5a"
-    show_tensorflow_log(log_file)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--log_file", type=str,
+                        help="path to events file")
+    parser.add_argument("--title_text", type=str, default='',
+                        help="title of output plot")
+    parser.add_argument("--output_image_name", type=str, default='validation_results.png',
+                        help="title of output plot")
+    opt = parser.parse_args()
+    log_file = opt.log_file
+    title_text = opt.title_text
+    output_image_name = opt.output_image_name
+    show_tensorflow_log(log_file, title_text=title_text,
+                        output_image_name=output_image_name)
