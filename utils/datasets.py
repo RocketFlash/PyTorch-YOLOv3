@@ -4,29 +4,33 @@ import os
 import sys
 import numpy as np
 from PIL import Image
+import cv2
 import torch
 import torch.nn.functional as F
 
-from utils.augmentations import horisontal_flip, make_augmented
+from utils.augmentations import horisontal_flip, make_augmented, make_augmented_night
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 
 
 def pad_to_square(img, pad_value):
-    c, h, w = img.shape
+    # c, h, w = img.shape
+    h, w, c = img.shape
     dim_diff = np.abs(h - w)
     # (upper / left) padding and (lower / right) padding
     pad1, pad2 = dim_diff // 2, dim_diff - dim_diff // 2
     # Determine padding
     pad = (0, 0, pad1, pad2) if h <= w else (pad1, pad2, 0, 0)
     # Add padding
-    img = F.pad(img, pad, "constant", value=pad_value)
-
+    # img = F.pad(img, pad, "constant", value=pad_value)
+    # (pad_left, pad_right, pad_top, pad_bottom)
+    img = np.pad(img, ((pad[2], pad[3]), (pad[0], pad[1]), (0, 0)), 'constant')
     return img, pad
 
 
 def resize(image, size):
-    image = F.interpolate(image.unsqueeze(0), size=size, mode="nearest").squeeze(0)
+    image = F.interpolate(image.unsqueeze(0), size=size,
+                          mode="nearest").squeeze(0)
     return image
 
 
@@ -62,7 +66,8 @@ class ListDataset(Dataset):
             self.img_files = file.readlines()
 
         self.label_files = [
-            path.replace("images", "labels").replace(".png", ".txt").replace(".jpg", ".txt")
+            path.replace("images", "labels").replace(
+                ".png", ".txt").replace(".jpg", ".txt")
             for path in self.img_files
         ]
         self.img_size = img_size
@@ -83,19 +88,22 @@ class ListDataset(Dataset):
         img_path = self.img_files[index % len(self.img_files)].rstrip()
 
         # Extract image as PyTorch tensor
-        img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
+        # img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         # Handle images with less than three channels
         if len(img.shape) != 3:
-            img = img.unsqueeze(0)
-            img = img.expand((3, img.shape[1:]))
+            img = np.expand_dims(img, axis=0)
+            # img = img.unsqueeze(0)
+            # img = img.expand((3, img.shape[1:]))
 
-        _, h, w = img.shape
+        # _, h, w = img.shape
+        h, w, _ = img.shape
         h_factor, w_factor = (h, w) if self.normalized_labels else (1, 1)
         # Pad to square resolution
         img, pad = pad_to_square(img, 0)
-        _, padded_h, padded_w = img.shape
-
+        padded_h, padded_w, _ = img.shape
         # ---------
         #  Label
         # ---------
@@ -127,9 +135,15 @@ class ListDataset(Dataset):
         # Apply augmentations
         if self.augment:
             if np.random.random() < 0.5:
-                img, targets = horisontal_flip(img, targets)
                 # img, targets = make_augmented(img, targets)
+                img = make_augmented_night(img)
 
+        img = torch.from_numpy(img)
+        img = img.permute(2, 0, 1).float()
+
+        if self.augment:
+            if np.random.random() < 0.5:
+                horisontal_flip(img, targets)
         return img_path, img, targets
 
     def collate_fn(self, batch):
@@ -142,7 +156,8 @@ class ListDataset(Dataset):
         targets = torch.cat(targets, 0)
         # Selects new image size every tenth batch
         if self.multiscale and self.batch_count % 10 == 0:
-            self.img_size = random.choice(range(self.min_size, self.max_size + 1, 32))
+            self.img_size = random.choice(
+                range(self.min_size, self.max_size + 1, 32))
         # Resize images to input shape
         imgs = torch.stack([resize(img, self.img_size) for img in imgs])
         self.batch_count += 1

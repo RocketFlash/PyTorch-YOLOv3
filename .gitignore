@@ -11,3 +11,8 @@ weights/*.weights
 __pycache__
 checkpoints
 weights/*
+logs/
+logs_with/
+logs_without/
+checkpoints_with_aug/
+checkpoints_without_aug/
