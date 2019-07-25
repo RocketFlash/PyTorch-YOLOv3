@@ -20,11 +20,11 @@ from torch.autograd import Variable
 import torch.optim as optim
 
 
-def evaluate(model, path, iou_thres, conf_thres, nms_thres, img_size, batch_size, n_cpu):
+def evaluate(model, path, iou_thres, conf_thres, nms_thres, img_width, img_height, batch_size, n_cpu):
     model.eval()
 
     # Get dataloader
-    dataset = ListDataset(path, img_size=img_size,
+    dataset = ListDataset(path, img_size_w=img_width, img_size_h=img_height,
                           augment=False, multiscale=False)
     dataloader = torch.utils.data.DataLoader(
         dataset, batch_size=batch_size, shuffle=False, num_workers=n_cpu, collate_fn=dataset.collate_fn
@@ -39,8 +39,9 @@ def evaluate(model, path, iou_thres, conf_thres, nms_thres, img_size, batch_size
         # Extract labels
         labels += targets[:, 1].tolist()
         # Rescale target
+        print(targets)
         targets[:, 2:] = xywh2xyxy(targets[:, 2:])
-        targets[:, 2:] *= img_size
+        targets[:, 2:] *= img_size_w
 
         imgs = Variable(imgs.type(Tensor), requires_grad=False)
 
@@ -81,8 +82,10 @@ if __name__ == "__main__":
                         help="iou thresshold for non-maximum suppression")
     parser.add_argument("--n_cpu", type=int, default=8,
                         help="number of cpu threads to use during batch generation")
-    parser.add_argument("--img_size", type=int, default=416,
-                        help="size of each image dimension")
+    parser.add_argument("--img_size_w", type=int, default=416,
+                        help="size of  wodth of each image dimension")
+    parser.add_argument("--img_size_h", type=int, default=416,
+                        help="size of height of each image dimension")
     parser.add_argument("--gpu_id", type=int, default=0,
                         help="id of GPU")
     opt = parser.parse_args()
@@ -115,7 +118,8 @@ if __name__ == "__main__":
         iou_thres=opt.iou_thres,
         conf_thres=opt.conf_thres,
         nms_thres=opt.nms_thres,
-        img_size=opt.img_size,
+        img_size_w=opt.img_size_w,
+        img_size_h=opt.img_size_h,
         batch_size=opt.batch_size,
         n_cpu=opt.n_cpu
     )

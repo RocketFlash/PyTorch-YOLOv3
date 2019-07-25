@@ -38,7 +38,11 @@ if __name__ == "__main__":
                         help="if specified starts from checkpoint model")
     parser.add_argument("--n_cpu", type=int, default=8,
                         help="number of cpu threads to use during batch generation")
-    parser.add_argument("--img_size", type=int, default=416,
+    # parser.add_argument("--img_size", type=int, default=416,
+    #                     help="size of each image dimension")
+    parser.add_argument("--img_width", type=int, default=800,
+                        help="size of each image dimension")
+    parser.add_argument("--img_height", type=int, default=800,
                         help="size of each image dimension")
     parser.add_argument("--checkpoint_interval", type=int,
                         default=1, help="interval between saving model weights")
@@ -95,13 +99,13 @@ if __name__ == "__main__":
 
     # Get dataloader
     if mode == 0:
-        dataset = ListDataset(train_path, augment=False,
+        dataset = ListDataset(train_path, augment=False, img_size_w=opt.img_width, img_size_h=opt.img_height,
                               multiscale=opt.multiscale_training)
     elif mode == 1:
-        dataset = ListDataset(train_path, augment=True,
+        dataset = ListDataset(train_path, augment=True, img_size_w=opt.img_width, img_size_h=opt.img_height,
                               multiscale=opt.multiscale_training)
     else:
-        dataset = ListDataset(train_path, augment=False,
+        dataset = ListDataset(train_path, augment=False, img_size_w=opt.img_width, img_size_h=opt.img_height,
                               multiscale=opt.multiscale_training)
 
     dataloader = torch.utils.data.DataLoader(
@@ -199,7 +203,9 @@ if __name__ == "__main__":
                 iou_thres=0.5,
                 conf_thres=0.5,
                 nms_thres=0.5,
-                img_size=opt.img_size,
+                # img_size=opt.img_size,
+                img_width = opt.img_width,
+                img_height = opt.img_height,
                 batch_size=8,
             )
             evaluation_metrics = [

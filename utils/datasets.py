@@ -41,9 +41,10 @@ def random_resize(images, min_size=288, max_size=448):
 
 
 class ImageFolder(Dataset):
-    def __init__(self, folder_path, img_size=416):
+    def __init__(self, folder_path, img_size_w=416, img_size_h=416):
         self.files = sorted(glob.glob("%s/*.*" % folder_path))
-        self.img_size = img_size
+        self.img_size_w = img_size_w
+        self.img_size_h = img_size_h
 
     def __getitem__(self, index):
         img_path = self.files[index % len(self.files)]
@@ -56,7 +57,7 @@ class ImageFolder(Dataset):
         # Resize
         img = torch.from_numpy(img)
         img = img.permute(2, 0, 1).float()
-        img = resize(img, self.img_size)
+        img = resize(img, self.img_size_h)
 
         return img_path, img
 
@@ -65,7 +66,7 @@ class ImageFolder(Dataset):
 
 
 class ListDataset(Dataset):
-    def __init__(self, list_path, img_size=416, augment=True, multiscale=True, normalized_labels=True):
+    def __init__(self, list_path, img_size_w=416, img_size_h=416, augment=True, multiscale=True, normalized_labels=True):
         with open(list_path, "r") as file:
             self.img_files = file.readlines()
 
@@ -74,13 +75,16 @@ class ListDataset(Dataset):
                 ".png", ".txt").replace(".jpg", ".txt")
             for path in self.img_files
         ]
-        self.img_size = img_size
+        self.img_size_w = img_size_w
+        self.img_size_h = img_size_h
         self.max_objects = 100
         self.augment = augment
         self.multiscale = multiscale
         self.normalized_labels = normalized_labels
-        self.min_size = self.img_size - 3 * 32
-        self.max_size = self.img_size + 3 * 32
+        self.min_size_w = self.img_size_w - 3 * 32
+        self.max_size_w = self.img_size_w + 3 * 32
+        self.min_size_h = self.img_size_h - 3 * 32
+        self.max_size_h = self.img_size_h + 3 * 32
         self.batch_count = 0
 
     def __getitem__(self, index):
@@ -108,6 +112,7 @@ class ListDataset(Dataset):
         # Pad to square resolution
         img, pad = pad_to_square(img, 0)
         padded_h, padded_w, _ = img.shape
+        # cv2.imwrite('squared_images/'+img_path.split('/')[-1],img)
         # ---------
         #  Label
         # ---------
@@ -160,10 +165,14 @@ class ListDataset(Dataset):
         targets = torch.cat(targets, 0)
         # Selects new image size every tenth batch
         if self.multiscale and self.batch_count % 10 == 0:
-            self.img_size = random.choice(
-                range(self.min_size, self.max_size + 1, 32))
+            self.img_size_w = random.choice(
+                range(self.min_size_w, self.max_size_w + 1, 32))
+            self.img_size_h = random.choice(
+                range(self.min_size_h, self.max_size_h + 1, 32))
         # Resize images to input shape
-        imgs = torch.stack([resize(img, self.img_size) for img in imgs])
+
+        # imgs = torch.stack([resize(img, (self.img_size_h, self.img_size_w)) for img in imgs])
+        imgs = torch.stack([resize(img, self.img_size_h) for img in imgs])
         self.batch_count += 1
         return paths, imgs, targets
 

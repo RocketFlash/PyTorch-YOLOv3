@@ -17,3 +17,4 @@ logs_without/
 checkpoints_with_aug/
 checkpoints_without_aug/
 ._.DS_Store
+squared_images/
