@@ -57,12 +57,18 @@ if __name__ == "__main__":
     if mode == 0:
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
         logger = Logger("logs_without")
-    else:
+        logger_val = Logger("logs_without/validation")
+    elif mode == 1:
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         os.environ["CUDA_VISIBLE_DEVICES"] = "1"
         logger = Logger("logs_with")
+        logger_val = Logger("logs_with/validation")
+    else: 
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+        logger = Logger("logs_gan")
+        logger_val = Logger("logs_gan/validation")
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
@@ -91,8 +97,11 @@ if __name__ == "__main__":
     if mode == 0:
         dataset = ListDataset(train_path, augment=False,
                               multiscale=opt.multiscale_training)
-    else:
+    elif mode == 1:
         dataset = ListDataset(train_path, augment=True,
+                              multiscale=opt.multiscale_training)
+    else:
+        dataset = ListDataset(train_path, augment=False,
                               multiscale=opt.multiscale_training)
 
     dataloader = torch.utils.data.DataLoader(
@@ -199,7 +208,7 @@ if __name__ == "__main__":
                 ("val_mAP", AP.mean()),
                 ("val_f1", f1.mean()),
             ]
-            logger.list_of_scalars_summary(evaluation_metrics, epoch)
+            logger_val.list_of_scalars_summary(evaluation_metrics, epoch)
 
             # Print class APs and mAP
             ap_table = [["Index", "Class name", "AP"]]
@@ -212,6 +221,9 @@ if __name__ == "__main__":
             if mode == 0:
                 torch.save(model.state_dict(),
                            f"checkpoints_without_aug/yolov3_ckpt_%d.pth" % epoch)
-            else:
+            elif mode == 1:
                 torch.save(model.state_dict(),
                            f"checkpoints_with_aug/yolov3_ckpt_%d.pth" % epoch)
+            else:
+                torch.save(model.state_dict(),
+                           f"checkpoints_gan/yolov3_ckpt_%d.pth" % epoch)
