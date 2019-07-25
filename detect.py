@@ -68,7 +68,11 @@ if __name__ == "__main__":
 
     print("\nPerforming object detection:")
     prev_time = time.time()
+
+    cnt = 0
     for batch_i, (img_paths, input_imgs) in enumerate(dataloader):
+        if cnt>10:
+            break
         # Configure input
         input_imgs = Variable(input_imgs.type(Tensor))
 
@@ -86,6 +90,7 @@ if __name__ == "__main__":
         # Save image and detections
         imgs.extend(img_paths)
         img_detections.extend(detections)
+        cnt+=1
 
     # Bounding-box colors
     cmap = plt.get_cmap("tab20b")
