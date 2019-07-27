@@ -41,7 +41,7 @@ def evaluate(model, path, iou_thres, conf_thres, nms_thres, img_width, img_heigh
         # Rescale target
         print(targets)
         targets[:, 2:] = xywh2xyxy(targets[:, 2:])
-        targets[:, 2:] *= img_size_w
+        targets[:, 2:] *= img_width
 
         imgs = Variable(imgs.type(Tensor), requires_grad=False)
 

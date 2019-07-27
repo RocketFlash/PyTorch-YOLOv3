@@ -207,6 +207,7 @@ if __name__ == "__main__":
                 img_width = opt.img_width,
                 img_height = opt.img_height,
                 batch_size=8,
+                n_cpu = opt.n_cpu
             )
             evaluation_metrics = [
                 ("val_precision", precision.mean()),

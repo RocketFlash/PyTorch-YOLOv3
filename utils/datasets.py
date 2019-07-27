@@ -99,7 +99,11 @@ class ListDataset(Dataset):
         # img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
+         # Apply augmentations
+        if self.augment:
+            if np.random.random() < 0.5:
+                # img, targets = make_augmented(img, targets)
+                img = make_augmented_night(img)
         # Handle images with less than three channels
         if len(img.shape) != 3:
             img = np.expand_dims(img, axis=0)
@@ -140,12 +144,6 @@ class ListDataset(Dataset):
 
             targets = torch.zeros((len(boxes), 6))
             targets[:, 1:] = boxes
-
-        # Apply augmentations
-        if self.augment:
-            if np.random.random() < 0.5:
-                # img, targets = make_augmented(img, targets)
-                img = make_augmented_night(img)
 
         img = torch.from_numpy(img)
         img = img.permute(2, 0, 1).float()
