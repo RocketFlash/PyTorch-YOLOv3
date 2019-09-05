@@ -14,6 +14,8 @@ weights/*
 logs/
 logs_with/
 logs_without/
+checkpoints*
+logs*
 checkpoints_with_aug/
 checkpoints_without_aug/
 ._.DS_Store
