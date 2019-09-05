@@ -60,7 +60,7 @@ if __name__ == "__main__":
     mode = opt.mode
     if mode == 0:
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+        os.environ["CUDA_VISIBLE_DEVICES"] = "1"
         logger = Logger("logs_without")
         logger_val = Logger("logs_without/validation")
     elif mode == 1:
