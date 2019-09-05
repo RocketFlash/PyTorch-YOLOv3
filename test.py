@@ -18,6 +18,7 @@ from torchvision import datasets
 from torchvision import transforms
 from torch.autograd import Variable
 import torch.optim as optim
+import pickle
 
 
 def evaluate(model, path, iou_thres, conf_thres, nms_thres, img_width, img_height, batch_size, n_cpu):
@@ -61,6 +62,28 @@ def evaluate(model, path, iou_thres, conf_thres, nms_thres, img_width, img_heigh
     return precision, recall, AP, f1, ap_class
 
 
+# With augmentation
+#python test.py --weights_path checkpoints_with_aug/yolov3_ckpt_19.pth 
+# --model_def /datasets/datasets/bdd100k/yolo_files/without_gan/yolov3-bdd100k.cfg 
+# --data_config /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.data 
+# --class_path /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.names
+# --batch_size=4 --pickle_file_name with_aug.pkl
+
+# Without augmentation
+#python test.py --weights_path checkpoints_without_aug/yolov3_ckpt_19.pth 
+# --model_def /datasets/datasets/bdd100k/yolo_files/without_gan/yolov3-bdd100k.cfg 
+# --data_config /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.data 
+# --class_path /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.names
+# --batch_size=4 --pickle_file_name without_aug.pkl
+
+# With GAN
+# python test.py --weights_path checkpoints_gan/yolov3_ckpt_19.pth 
+# --model_def ~/datasets/bdd100k/yolo_files/with_gan/yolov3-bdd100k.cfg 
+# --data_config ~/datasets/bdd100k/yolo_files/with_gan/bdd100k.data 
+# --class_path ~/datasets/bdd100k/yolo_files/with_gan/bdd100k.names 
+# --batch_size=4 --pickle_file_name with_gan.pkl
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", type=int, default=8,
@@ -87,6 +110,8 @@ if __name__ == "__main__":
                         help="size of height of each image dimension")
     parser.add_argument("--gpu_id", type=int, default=0,
                         help="id of GPU")
+    parser.add_argument("--pickle_file_name", type=str,
+                        default="data.pkl", help="pickle filename to save")
     opt = parser.parse_args()
     print(opt)
 
@@ -122,6 +147,15 @@ if __name__ == "__main__":
         batch_size=opt.batch_size,
         n_cpu=opt.n_cpu
     )
+
+    data = {'precision':precision,
+            'recall': recall,
+            'AP':AP,
+            'f1':f1,
+            'ap_class': ap_class}
+    file_name = opt.pickle_file_name
+    with open(file_name,'wb') as f:
+        pickle.dump(data,f)
 
     print("Average Precisions:")
     for i, c in enumerate(ap_class):
