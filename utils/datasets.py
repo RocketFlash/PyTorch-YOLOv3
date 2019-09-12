@@ -86,6 +86,7 @@ class ListDataset(Dataset):
         self.min_size_h = self.img_size_h - 3 * 32
         self.max_size_h = self.img_size_h + 3 * 32
         self.batch_count = 0
+        self.aug_save_idx = 0
 
     def __getitem__(self, index):
 
@@ -103,7 +104,11 @@ class ListDataset(Dataset):
         if self.augment:
             if np.random.random() < 0.5:
                 # img, targets = make_augmented(img, targets)
+                # print('I am here!')
                 img = make_augmented_night(img)
+
+                #cv2.imwrite('augmented_data/{}.jpg'.format(self.aug_save_idx), cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                #self.aug_save_idx +=1
         # Handle images with less than three channels
         if len(img.shape) != 3:
             img = np.expand_dims(img, axis=0)
@@ -148,9 +153,9 @@ class ListDataset(Dataset):
         img = torch.from_numpy(img)
         img = img.permute(2, 0, 1).float()
 
-        if self.augment:
-            if np.random.random() < 0.5:
-                horisontal_flip(img, targets)
+        #if self.augment:
+        #    if np.random.random() < 0.5:
+        #        horisontal_flip(img, targets)
         return img_path, img, targets
 
     def collate_fn(self, batch):

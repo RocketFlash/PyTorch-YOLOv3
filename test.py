@@ -63,25 +63,13 @@ def evaluate(model, path, iou_thres, conf_thres, nms_thres, img_width, img_heigh
 
 
 # With augmentation
-#python test.py --weights_path checkpoints_with_aug/yolov3_ckpt_19.pth 
-# --model_def /datasets/datasets/bdd100k/yolo_files/without_gan/yolov3-bdd100k.cfg 
-# --data_config /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.data 
-# --class_path /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.names
-# --batch_size=4 --pickle_file_name with_aug.pkl
+#python test.py --weights_path checkpoints_with_aug/yolov3_ckpt_19.pth --model_def /datasets/datasets/bdd100k/yolo_files/without_gan/yolov3-bdd100k.cfg --data_config /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.data --class_path /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.names --gpu_id=0 --batch_size=4 --pickle_file_name with_aug.pkl --conf_thres 0.9
 
 # Without augmentation
-#python test.py --weights_path checkpoints_without_aug/yolov3_ckpt_19.pth 
-# --model_def /datasets/datasets/bdd100k/yolo_files/without_gan/yolov3-bdd100k.cfg 
-# --data_config /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.data 
-# --class_path /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.names
-# --batch_size=4 --pickle_file_name without_aug.pkl
+#python test.py --weights_path checkpoints_without_aug/yolov3_ckpt_19.pth --model_def /datasets/datasets/bdd100k/yolo_files/without_gan/yolov3-bdd100k.cfg --data_config /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.data --class_path /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.names --gpu_id=1 --batch_size=4 --pickle_file_name without_aug.pkl --conf_thres 0.9
 
 # With GAN
-# python test.py --weights_path checkpoints_gan/yolov3_ckpt_19.pth 
-# --model_def ~/datasets/bdd100k/yolo_files/with_gan/yolov3-bdd100k.cfg 
-# --data_config ~/datasets/bdd100k/yolo_files/with_gan/bdd100k.data 
-# --class_path ~/datasets/bdd100k/yolo_files/with_gan/bdd100k.names 
-# --batch_size=4 --pickle_file_name with_gan.pkl
+# python test.py --weights_path checkpoints_gan/yolov3_ckpt_19.pth --model_def ~/datasets/bdd100k/yolo_files/with_gan/yolov3-bdd100k.cfg --data_config ~/datasets/bdd100k/yolo_files/with_gan/bdd100k.data --class_path ~/datasets/bdd100k/yolo_files/with_gan/bdd100k.names --batch_size=4 --pickle_file_name with_gan.pkl --conf_thres 0.9
 
 
 if __name__ == "__main__":
