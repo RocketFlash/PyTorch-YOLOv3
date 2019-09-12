@@ -150,27 +150,20 @@ def random_float(low, high):
 
 
 def make_augmented_night(images):
-    aug_params = [OneOf([
-        Blur(blur_limit=5, p=1.),
-        RandomGamma(gamma_limit=(50, 150), p=1.),
-        HueSaturationValue(hue_shift_limit=20,
-                           sat_shift_limit=30, val_shift_limit=20, p=1.),
-        RGBShift(r_shift_limit=15, g_shift_limit=5, b_shift_limit=15, p=1.),
-        RandomBrightness(limit=.25, p=1.),
-        RandomContrast(limit=.25, p=1.),
-        MedianBlur(blur_limit=5, p=1.),
-        CLAHE(clip_limit=2.0, tile_grid_size=(8, 8), p=1.)
-    ], p=1.),
-        GaussNoise(var_limit=(10.0, 120.0), p=0.4)
-    ]
-    annotations = {'image': images}
 
-    aug = get_aug(aug_params)
-    augmented = aug(**annotations)
-    augmented_image = augmented['image']
+    mul = random_float(0.1, 0.3)
+    add = np.random.randint(-50,-20)
+    gamma = random_float(1,2)
+        
+    aug = iaa.OneOf([
+                iaa.Multiply(mul = mul),
+                iaa.Add(value = add),
+                iaa.GammaContrast(gamma=gamma)
+                ])
+
    
-
+    image_augmented = aug.augment_image(images)
     
-    images = torch.from_numpy(augmented_image).float()
-    
-    return images
+    # images = torch.from_numpy(image_augmented).float()
+    #image_augmented = images
+    return image_augmented
