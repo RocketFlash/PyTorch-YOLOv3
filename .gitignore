@@ -22,3 +22,4 @@ checkpoints_without_aug/
 squared_images/
 augmented_data/
 images_to_test/
+*.avi

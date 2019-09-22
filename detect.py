@@ -31,16 +31,17 @@ from matplotlib.ticker import NullLocator
 
 # python detect.py--image_folder '/home/rauf/datasets/bdd100k/images/test/' --weights_path checkpoints_gan/yolov3_ckpt_19.pth --model_def ~/datasets/bdd100k/yolo_files/with_gan/yolov3-bdd100k.cfg --data_config ~/datasets/bdd100k/yolo_files/with_gan/bdd100k.data --class_path ~/datasets/bdd100k/yolo_files/with_gan/bdd100k.names
 
+# python detect.py --image_folder /datasets/datasets/icra_augmentation/night --weights_path checkpoints_with_aug/yolov3_ckpt_19.pth --model_def /datasets/datasets/bdd100k/yolo_files/without_gan/yolov3-bdd100k.cfg  --class_path /datasets/datasets/bdd100k/yolo_files/without_gan/bdd100k.names  --conf_thres 0.9
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--image_folder", type=str, default="data/samples", help="path to dataset")
     parser.add_argument("--model_def", type=str, default="config/yolov3.cfg", help="path to model definition file")
     parser.add_argument("--weights_path", type=str, default="weights/yolov3.weights", help="path to weights file")
     parser.add_argument("--class_path", type=str, default="data/coco.names", help="path to class label file")
-    parser.add_argument("--conf_thres", type=float, default=0.9, help="object confidence threshold")
+    parser.add_argument("--conf_thres", type=float, default=0.8, help="object confidence threshold")
     parser.add_argument("--nms_thres", type=float, default=0.5, help="iou thresshold for non-maximum suppression")
     parser.add_argument("--batch_size", type=int, default=1, help="size of the batches")
-    parser.add_argument("--n_cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
+    parser.add_argument("--n_cpu", type=int, default=0, help="number of cpu threads to use during batch generation")
     parser.add_argument("--img_size", type=int, default=800, help="size of each image dimension")
     parser.add_argument("--checkpoint_model", type=str, help="path to checkpoint model")
     opt = parser.parse_args()
@@ -81,8 +82,8 @@ if __name__ == "__main__":
 
     cnt = 0
     for batch_i, (img_paths, input_imgs) in enumerate(dataloader):
-        if cnt>10:
-            break
+        # if cnt>10:
+        #     break
         # Configure input
         input_imgs = Variable(input_imgs.type(Tensor))
 
@@ -103,8 +104,10 @@ if __name__ == "__main__":
         cnt+=1
 
     # Bounding-box colors
-    cmap = plt.get_cmap("tab20b")
+    cmap = plt.get_cmap("hsv")
     colors = [cmap(i) for i in np.linspace(0, 1, 20)]
+    print(colors)
+    out = cv2.VideoWriter('out_without_classical_aug.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 25, (1024,576))
 
     print("\nSaving images:")
     # Iterate through images and save plot of detections
@@ -113,11 +116,12 @@ if __name__ == "__main__":
         print("(%d) Image: '%s'" % (img_i, path))
 
         # Create plot
-        img = np.array(Image.open(path))
-        plt.figure()
-        fig, ax = plt.subplots(1)
-        ax.imshow(img)
+        # img = np.array(Image.open(path))
+        # plt.figure()
+        # fig, ax = plt.subplots(1)
+        # ax.imshow(img)
 
+        img = cv2.imread(path)
         # Draw bounding boxes and labels of detections
         if detections is not None:
             # Rescale boxes to original image
@@ -132,25 +136,31 @@ if __name__ == "__main__":
                 box_w = x2 - x1
                 box_h = y2 - y1
 
-                color = bbox_colors[int(np.where(unique_labels == int(cls_pred))[0])]
+                # color = bbox_colors[int(np.where(unique_labels == int(cls_pred))[0])]
+                color = colors[int(cls_pred)][:3]
+                color = [int(255 *colr) for colr in color]
+                cv2.rectangle(img,(x1,y1),(x2,y2),color,2)
+                cv2.putText(img,classes[int(cls_pred)],(x1,y1), cv2.FONT_HERSHEY_SIMPLEX, 0.4,(255,255,255),1,cv2.LINE_AA)
                 # Create a Rectangle patch
-                bbox = patches.Rectangle((x1, y1), box_w, box_h, linewidth=2, edgecolor=color, facecolor="none")
+                # bbox = patches.Rectangle((x1, y1), box_w, box_h, linewidth=2, edgecolor=color, facecolor="none")
                 # Add the bbox to the plot
-                ax.add_patch(bbox)
+                # ax.add_patch(bbox)
                 # Add label
-                plt.text(
-                    x1,
-                    y1,
-                    s=classes[int(cls_pred)],
-                    color="white",
-                    verticalalignment="top",
-                    bbox={"color": color, "pad": 0},
-                )
-
+                # plt.text(
+                #     x1,
+                #     y1,
+                #     s=classes[int(cls_pred)],
+                #     color="white",
+                #     verticalalignment="top",
+                #     bbox={"color": color, "pad": 0},
+                # )
+        img = cv2.resize(img,None,fx=0.8,fy=0.8)
+        out.write(img)
         # Save generated image with detections
-        plt.axis("off")
-        plt.gca().xaxis.set_major_locator(NullLocator())
-        plt.gca().yaxis.set_major_locator(NullLocator())
-        filename = path.split("/")[-1].split(".")[0]
-        plt.savefig(f"output/{filename}.png", bbox_inches="tight", pad_inches=0.0)
-        plt.close()
+        # plt.axis("off")
+        # plt.gca().xaxis.set_major_locator(NullLocator())
+        # plt.gca().yaxis.set_major_locator(NullLocator())
+        # filename = path.split("/")[-1].split(".")[0]
+        # cv2.imwrite(f"output/{filename}.png", img)
+        # plt.savefig(f"output/{filename}.png", bbox_inches="tight", pad_inches=0.0)
+        # plt.close()
